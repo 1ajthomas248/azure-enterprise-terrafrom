@@ -1,0 +1,59 @@
+# Terraform local working directories
+.terraform/
+**/.terraform/
+
+# Terraform state, backups, and crash logs
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Terraform variable and backend files can contain secrets
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfbackend
+!*.tfvars.example
+!*.tfvars.json.example
+!*.tfbackend.example
+
+# Terraform plan output and overrides
+*.tfplan
+*.plan
+plan.out
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform CLI config may include credentials
+.terraformrc
+terraform.rc
+
+# Azure and local environment secrets
+.azure/
+azureauth.json
+.env
+.env.*
+*.env
+
+# Keys, certificates, and tokens
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.csr
+*.jks
+*.keystore
+*.token
+
+# Logs and OS/editor noise
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
