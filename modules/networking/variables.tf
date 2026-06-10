@@ -1,9 +1,27 @@
-variable "address_space" {
-    type = string
-    default = "10.0.0.0/16"
+variable "resource_group_name" {
+  type = string
 }
 
-variable "address_prefix" {
-    type = list(string)
-    default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24", "10.0.5.0/24"]
+variable "location" {
+  type = string
+}
+
+variable "common_tags" {
+  type    = map(string)
+  default = {}
+}
+
+variable "vnet" {
+  type = object({
+    name          = string
+    address_space = list(string)
+  })
+}
+
+variable "subnets" {
+  type = map(object({
+    name             = string
+    address_prefixes = list(string)
+    nsg_enabled      = bool
+  }))
 }
