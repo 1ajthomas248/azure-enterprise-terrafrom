@@ -74,3 +74,26 @@ module "networking" {
     }
   }
 }
+
+module "identity" {
+  source = "./modules/identity"
+
+  resource_group_name = azurerm_resource_group.azure_enterprise_project.name
+  location            = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix         = "azure-enterprise"
+
+  common_tags = {
+    environment = "dev"
+    project     = "azure-enterprise"
+  }
+
+  identities = {
+    app = {
+      name_suffix = "app"
+    }
+
+    vm = {
+      name_suffix = "vm"
+    }
+  }
+}

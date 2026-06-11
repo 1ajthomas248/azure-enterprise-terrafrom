@@ -9,3 +9,11 @@ output "subnet_ids" {
 output "application_gateway_public_ip_address" {
   value = module.networking.application_gateway_public_ip_address
 }
+
+output "identity_ids" {
+  value = module.identity.identity_ids
+}
+
+output "identity_principal_ids" {
+  value = module.identity.principal_ids
+}
