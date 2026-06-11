@@ -13,7 +13,7 @@ terraform {
 }
 
 resource "azurerm_resource_group" "azure_enterprise_project" {
-  name     = "azure_enterprise_project"
+  name     = "azure-enterprise-project"
   location = "East US"
 }
 
@@ -22,6 +22,7 @@ module "networking" {
 
   resource_group_name = azurerm_resource_group.azure_enterprise_project.name
   location            = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix         = "azure-enterprise"
 
   common_tags = {
     environment = "dev"
@@ -38,6 +39,14 @@ module "networking" {
       name             = "app-subnet"
       address_prefixes = ["10.0.1.0/24"]
       nsg_enabled      = true
+
+      delegation = {
+        name                    = "app-service-delegation"
+        service_delegation_name = "Microsoft.Web/serverFarms"
+        actions = [
+          "Microsoft.Network/virtualNetworks/subnets/action"
+        ]
+      }
     }
 
     vm = {
