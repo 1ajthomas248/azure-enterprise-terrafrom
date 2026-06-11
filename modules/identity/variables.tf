@@ -25,3 +25,13 @@ variable "identities" {
     name_suffix = string
   }))
 }
+
+variable "role_assignments" {
+  description = "Map of RBAC role assignments for managed identities."
+  type = map(object({
+    principal_key        = string
+    role_definition_name = string
+    scope                = string
+  }))
+  default = {}
+}

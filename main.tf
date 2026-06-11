@@ -96,4 +96,6 @@ module "identity" {
       name_suffix = "vm"
     }
   }
+
+  role_assignments = {}
 }
