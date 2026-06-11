@@ -43,3 +43,58 @@ output "nsg_ids" {
     }
   )
 }
+
+output "app_subnet_id" {
+  description = "ID of the App Service integration subnet."
+  value       = azurerm_subnet.this["app"].id
+}
+
+output "vm_subnet_id" {
+  description = "ID of the virtual machine subnet."
+  value       = azurerm_subnet.this["vm"].id
+}
+
+output "private_endpoint_subnet_id" {
+  description = "ID of the private endpoint subnet."
+  value       = azurerm_subnet.this["private_endpoints"].id
+}
+
+output "application_gateway_subnet_id" {
+  description = "ID of the Application Gateway subnet."
+  value       = azurerm_subnet.this["appgw"].id
+}
+
+output "bastion_subnet_id" {
+  description = "ID of the Azure Bastion subnet."
+  value       = azurerm_subnet.this["bastion"].id
+}
+
+output "bastion_host_id" {
+  description = "ID of the Azure Bastion host."
+  value       = var.enable_bastion ? azurerm_bastion_host.this[0].id : null
+}
+
+output "bastion_host_name" {
+  description = "Name of the bastion host"
+  value       = var.enable_bastion ? azurerm_bastion_host.this[0].name : null
+}
+
+output "bastion_public_ip" {
+  description = "Public IP for the Azure Bastion host"
+  value       = var.enable_bastion ? azurerm_public_ip.bastion[0].ip_address : null
+}
+
+output "application_gateway_id" {
+  description = "ID of the Application Gateway."
+  value       = var.enable_application_gateway ? azurerm_application_gateway.this[0].id : null
+}
+
+output "application_gateway_name" {
+  description = "Name of the Application Gateway."
+  value       = var.enable_application_gateway ? azurerm_application_gateway.this[0].name : null
+}
+
+output "application_gateway_public_ip_address" {
+  description = "Public IP address assigned to the Application Gateway."
+  value       = var.enable_application_gateway ? azurerm_public_ip.application_gateway[0].ip_address : null
+}
