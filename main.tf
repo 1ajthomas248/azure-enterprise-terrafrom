@@ -135,6 +135,57 @@ module "keyvault" {
   }
 }
 
+module "data" {
+  source = "./modules/data"
+
+  resource_group_name        = azurerm_resource_group.azure_enterprise_project.name
+  location                   = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix                = "azure-enterprise"
+  private_endpoint_subnet_id = module.networking.private_endpoint_subnet_id
+  vnet_id                    = module.networking.vnet_id
+
+  common_tags = {
+    environment = "dev"
+    project     = "azure-enterprise"
+  }
+
+  sql = {
+    administrator_login = "sqladmin"
+  }
+
+  sql_administrator_login_password = var.sql_administrator_login_password
+
+  databases = {
+    app = {
+      sku_name    = "Basic"
+      max_size_gb = 2
+    }
+  }
+
+  storage = {
+    account_tier             = "Standard"
+    account_replication_type = "LRS"
+
+    containers = {
+      uploads = {}
+    }
+  }
+
+  role_assignments = {
+    app_sql_contributor = {
+      principal_id         = module.identity.principal_ids["app"]
+      role_definition_name = "Contributor"
+      service              = "sql"
+    }
+
+    app_storage_blob_contributor = {
+      principal_id         = module.identity.principal_ids["app"]
+      role_definition_name = "Storage Blob Data Contributor"
+      service              = "storage"
+    }
+  }
+}
+
 module "compute" {
   source = "./modules/compute"
 

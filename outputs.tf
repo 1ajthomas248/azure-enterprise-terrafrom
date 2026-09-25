@@ -30,6 +30,18 @@ output "key_vault_uri" {
   value = module.keyvault.uri
 }
 
+output "sql_server_fqdn" {
+  value = module.data.sql_server_fqdn
+}
+
+output "storage_account_name" {
+  value = module.data.storage_account_name
+}
+
+output "storage_primary_blob_endpoint" {
+  value = module.data.storage_primary_blob_endpoint
+}
+
 output "vm_private_ips" {
   value = module.compute.vm_private_ips
 }
