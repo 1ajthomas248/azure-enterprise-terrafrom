@@ -99,3 +99,72 @@ module "identity" {
 
   role_assignments = {}
 }
+
+data "azurerm_client_config" "current" {}
+
+module "keyvault" {
+  source = "./modules/keyvault"
+
+  resource_group_name = azurerm_resource_group.azure_enterprise_project.name
+  location            = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix         = "azure-enterprise"
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+
+  common_tags = {
+    environment = "dev"
+    project     = "azure-enterprise"
+  }
+
+  purge_protection_enabled = false
+
+  private_endpoint = {
+    subnet_id = module.networking.private_endpoint_subnet_id
+    vnet_id   = module.networking.vnet_id
+  }
+
+  role_assignments = {
+    app_secrets_user = {
+      principal_id         = module.identity.principal_ids["app"]
+      role_definition_name = "Key Vault Secrets User"
+    }
+
+    vm_secrets_user = {
+      principal_id         = module.identity.principal_ids["vm"]
+      role_definition_name = "Key Vault Secrets User"
+    }
+  }
+}
+
+module "compute" {
+  source = "./modules/compute"
+
+  resource_group_name = azurerm_resource_group.azure_enterprise_project.name
+  location            = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix         = "azure-enterprise"
+
+  common_tags = {
+    environment = "dev"
+    project     = "azure-enterprise"
+  }
+
+  vm_subnet_id = module.networking.vm_subnet_id
+
+  vms = {
+    api = {
+      size           = "Standard_B2s"
+      admin_username = "azureadmin"
+      admin_ssh_key  = "ssh-rsa REPLACE_WITH_YOUR_PUBLIC_KEY"
+      identity_id    = module.identity.identity_ids["vm"]
+    }
+  }
+
+  app_service = {
+    subnet_id     = module.networking.app_subnet_id
+    identity_id   = module.identity.identity_ids["app"]
+    key_vault_uri = module.keyvault.uri
+
+    app_stack = {
+      python_version = "3.11"
+    }
+  }
+}
