@@ -20,6 +20,8 @@ module "networking" {
 
   enable_bastion             = var.enable_bastion
   enable_application_gateway = var.enable_application_gateway
+  appgw_identity_id          = var.enable_application_gateway ? module.identity.identity_ids["appgw"] : null
+  ssl_certificate_secret_id  = var.ssl_certificate_secret_id
 
   vnet = {
     name          = "enterprise-vnet"
@@ -76,8 +78,9 @@ module "identity" {
   common_tags         = local.common_tags
 
   identities = {
-    app = { name_suffix = "app" }
-    vm  = { name_suffix = "vm" }
+    app   = { name_suffix = "app" }
+    vm    = { name_suffix = "vm" }
+    appgw = { name_suffix = "appgw" }
   }
 
   role_assignments = {}
@@ -108,6 +111,11 @@ module "keyvault" {
 
     vm_secrets_user = {
       principal_id         = module.identity.principal_ids["vm"]
+      role_definition_name = "Key Vault Secrets User"
+    }
+
+    appgw_secrets_user = {
+      principal_id         = module.identity.principal_ids["appgw"]
       role_definition_name = "Key Vault Secrets User"
     }
   }

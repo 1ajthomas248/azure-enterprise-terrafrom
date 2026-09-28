@@ -69,6 +69,12 @@ variable "vm_admin_ssh_key" {
   type        = string
 }
 
+variable "ssl_certificate_secret_id" {
+  description = "Key Vault secret ID (versioned URI) for the Application Gateway SSL certificate PFX. Required in prod when enable_application_gateway = true. Leave null in dev."
+  type        = string
+  default     = null
+}
+
 variable "sql_administrator_login_password" {
   description = "Password for the SQL Server administrator. Pass via TF_VAR_sql_administrator_login_password or a secrets manager — do not commit to source control."
   type      = string

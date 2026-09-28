@@ -206,6 +206,15 @@ resource "azurerm_application_gateway" "this" {
   resource_group_name = var.resource_group_name
   location            = var.location
 
+  dynamic "identity" {
+    for_each = var.appgw_identity_id != null ? [var.appgw_identity_id] : []
+
+    content {
+      type         = "UserAssigned"
+      identity_ids = [identity.value]
+    }
+  }
+
   sku {
     name     = "WAF_v2"
     tier     = "WAF_v2"
@@ -225,6 +234,24 @@ resource "azurerm_application_gateway" "this" {
   frontend_port {
     name = "http"
     port = 80
+  }
+
+  dynamic "frontend_port" {
+    for_each = var.ssl_certificate_secret_id != null ? [443] : []
+
+    content {
+      name = "https"
+      port = frontend_port.value
+    }
+  }
+
+  dynamic "ssl_certificate" {
+    for_each = var.ssl_certificate_secret_id != null ? [var.ssl_certificate_secret_id] : []
+
+    content {
+      name                = "appgw-ssl-cert"
+      key_vault_secret_id = ssl_certificate.value
+    }
   }
 
   backend_address_pool {
@@ -247,13 +274,69 @@ resource "azurerm_application_gateway" "this" {
     protocol                       = "Http"
   }
 
-  request_routing_rule {
-    name                       = "http-to-app-backend"
-    priority                   = 100
-    rule_type                  = "Basic"
-    http_listener_name         = "http"
-    backend_address_pool_name  = "app-backend-pool"
-    backend_http_settings_name = "http"
+  dynamic "http_listener" {
+    for_each = var.ssl_certificate_secret_id != null ? [true] : []
+
+    content {
+      name                           = "https"
+      frontend_ip_configuration_name = "public"
+      frontend_port_name             = "https"
+      protocol                       = "Https"
+      ssl_certificate_name           = "appgw-ssl-cert"
+    }
+  }
+
+  dynamic "redirect_configuration" {
+    for_each = var.ssl_certificate_secret_id != null ? [true] : []
+
+    content {
+      name                 = "http-to-https-redirect"
+      redirect_type        = "Permanent"
+      target_listener_name = "https"
+      include_path         = true
+      include_query_string = true
+    }
+  }
+
+  # HTTP → backend directly (HTTPS not configured)
+  dynamic "request_routing_rule" {
+    for_each = var.ssl_certificate_secret_id == null ? [true] : []
+
+    content {
+      name                       = "http-to-app-backend"
+      priority                   = 100
+      rule_type                  = "Basic"
+      http_listener_name         = "http"
+      backend_address_pool_name  = "app-backend-pool"
+      backend_http_settings_name = "http"
+    }
+  }
+
+  # HTTP → permanent redirect to HTTPS
+  dynamic "request_routing_rule" {
+    for_each = var.ssl_certificate_secret_id != null ? [true] : []
+
+    content {
+      name                        = "http-to-https-redirect"
+      priority                    = 100
+      rule_type                   = "Basic"
+      http_listener_name          = "http"
+      redirect_configuration_name = "http-to-https-redirect"
+    }
+  }
+
+  # HTTPS → backend
+  dynamic "request_routing_rule" {
+    for_each = var.ssl_certificate_secret_id != null ? [true] : []
+
+    content {
+      name                       = "https-to-app-backend"
+      priority                   = 200
+      rule_type                  = "Basic"
+      http_listener_name         = "https"
+      backend_address_pool_name  = "app-backend-pool"
+      backend_http_settings_name = "http"
+    }
   }
 
   waf_configuration {

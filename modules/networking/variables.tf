@@ -53,3 +53,15 @@ variable "enable_application_gateway" {
   type        = bool
   default     = true
 }
+
+variable "ssl_certificate_secret_id" {
+  description = "Key Vault secret ID for the SSL certificate PFX. Required when enable_application_gateway = true and HTTPS termination is needed."
+  type        = string
+  default     = null
+}
+
+variable "appgw_identity_id" {
+  description = "Resource ID of the user-assigned managed identity for the Application Gateway (used to pull certs from Key Vault)."
+  type        = string
+  default     = null
+}
