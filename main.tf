@@ -186,6 +186,31 @@ module "data" {
   }
 }
 
+module "governance" {
+  source = "./modules/governance"
+
+  resource_group_name  = azurerm_resource_group.azure_enterprise_project.name
+  resource_group_id    = azurerm_resource_group.azure_enterprise_project.id
+  location             = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix          = "azure-enterprise"
+  enable_resource_lock = false
+
+  common_tags = {
+    environment = "dev"
+    project     = "azure-enterprise"
+  }
+
+  allowed_locations = ["eastus"]
+  required_tags     = ["environment", "project"]
+
+  budget = {
+    monthly_amount   = 100
+    start_date       = "2026-10-01T00:00:00Z"
+    alert_thresholds = [80, 100]
+    contact_emails   = ["athomas@copado.com"]
+  }
+}
+
 module "compute" {
   source = "./modules/compute"
 
