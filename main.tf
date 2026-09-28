@@ -242,4 +242,6 @@ module "monitoring" {
   database_ids           = module.data.database_ids
   storage_account_id     = module.data.storage_account_id
   application_gateway_id = module.networking.application_gateway_id
+  app_service_id         = module.compute.app_service_id
+  vm_ids                 = module.compute.vm_ids
 }

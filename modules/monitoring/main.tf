@@ -101,6 +101,32 @@ resource "azurerm_monitor_diagnostic_setting" "storage_blob" {
   enabled_metric { category = "Transaction" }
 }
 
+resource "azurerm_monitor_diagnostic_setting" "app_service" {
+  count = var.app_service_id != null ? 1 : 0
+
+  name                       = "${var.name_prefix}-appservice-diag"
+  target_resource_id         = var.app_service_id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
+
+  enabled_log { category = "AppServiceHTTPLogs" }
+  enabled_log { category = "AppServiceConsoleLogs" }
+  enabled_log { category = "AppServiceAppLogs" }
+  enabled_log { category = "AppServiceAuditLogs" }
+  enabled_log { category = "AppServicePlatformLogs" }
+
+  enabled_metric { category = "AllMetrics" }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vm" {
+  for_each = var.vm_ids
+
+  name                       = "${var.name_prefix}-vm-${each.key}-diag"
+  target_resource_id         = each.value
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
+
+  enabled_metric { category = "AllMetrics" }
+}
+
 resource "azurerm_monitor_diagnostic_setting" "application_gateway" {
   count = var.application_gateway_id != null ? 1 : 0
 

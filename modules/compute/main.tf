@@ -23,6 +23,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   size                            = each.value.size
   admin_username                  = each.value.admin_username
   disable_password_authentication = true
+  encryption_at_host_enabled      = true
 
   network_interface_ids = [azurerm_network_interface.vm[each.key].id]
 
@@ -80,6 +81,8 @@ resource "azurerm_linux_web_app" "this" {
   }
 
   site_config {
+    minimum_tls_version = "1.2"
+
     application_stack {
       dotnet_version      = var.app_service.app_stack.dotnet_version
       node_version        = var.app_service.app_stack.node_version

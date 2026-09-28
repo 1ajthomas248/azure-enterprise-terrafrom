@@ -63,3 +63,15 @@ variable "application_gateway_id" {
   type        = string
   default     = null
 }
+
+variable "app_service_id" {
+  description = "Resource ID of the App Service to enable HTTP and application log diagnostics on"
+  type        = string
+  default     = null
+}
+
+variable "vm_ids" {
+  description = "Map of VM name keys to resource IDs to enable platform metric diagnostics on"
+  type        = map(string)
+  default     = {}
+}
