@@ -1,0 +1,11 @@
+environment                = "prod"
+location                   = "East US"
+name_prefix                = "azure-enterprise"
+enable_bastion             = true
+enable_application_gateway = true
+purge_protection_enabled   = true
+enable_resource_lock       = true
+plan_sku_name              = "P2v3"
+sql_database_sku           = "S2"
+storage_replication_type   = "GRS"
+budget_contact_emails      = ["athomas@copado.com"]

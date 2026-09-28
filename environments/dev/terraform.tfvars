@@ -1,0 +1,11 @@
+environment                = "dev"
+location                   = "East US"
+name_prefix                = "azure-enterprise"
+enable_bastion             = false
+enable_application_gateway = false
+purge_protection_enabled   = false
+enable_resource_lock       = false
+plan_sku_name              = "B1"
+sql_database_sku           = "Basic"
+storage_replication_type   = "LRS"
+budget_contact_emails      = ["athomas@copado.com"]

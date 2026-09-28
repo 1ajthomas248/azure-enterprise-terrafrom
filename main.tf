@@ -1,6 +1,13 @@
+locals {
+  common_tags = {
+    environment = var.environment
+    project     = var.name_prefix
+  }
+}
+
 resource "azurerm_resource_group" "azure_enterprise_project" {
-  name     = "azure-enterprise-project"
-  location = "East US"
+  name     = "${var.name_prefix}-project"
+  location = var.location
 }
 
 module "networking" {
@@ -8,12 +15,11 @@ module "networking" {
 
   resource_group_name = azurerm_resource_group.azure_enterprise_project.name
   location            = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix         = "azure-enterprise"
+  name_prefix         = var.name_prefix
+  common_tags         = local.common_tags
 
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
+  enable_bastion             = var.enable_bastion
+  enable_application_gateway = var.enable_application_gateway
 
   vnet = {
     name          = "enterprise-vnet"
@@ -66,21 +72,12 @@ module "identity" {
 
   resource_group_name = azurerm_resource_group.azure_enterprise_project.name
   location            = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix         = "azure-enterprise"
-
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
+  name_prefix         = var.name_prefix
+  common_tags         = local.common_tags
 
   identities = {
-    app = {
-      name_suffix = "app"
-    }
-
-    vm = {
-      name_suffix = "vm"
-    }
+    app = { name_suffix = "app" }
+    vm  = { name_suffix = "vm" }
   }
 
   role_assignments = {}
@@ -91,17 +88,12 @@ data "azurerm_client_config" "current" {}
 module "keyvault" {
   source = "./modules/keyvault"
 
-  resource_group_name = azurerm_resource_group.azure_enterprise_project.name
-  location            = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix         = "azure-enterprise"
-  tenant_id           = data.azurerm_client_config.current.tenant_id
-
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
-
-  purge_protection_enabled = false
+  resource_group_name      = azurerm_resource_group.azure_enterprise_project.name
+  location                 = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix              = var.name_prefix
+  tenant_id                = data.azurerm_client_config.current.tenant_id
+  common_tags              = local.common_tags
+  purge_protection_enabled = var.purge_protection_enabled
 
   private_endpoint = {
     subnet_id = module.networking.private_endpoint_subnet_id
@@ -126,14 +118,10 @@ module "data" {
 
   resource_group_name        = azurerm_resource_group.azure_enterprise_project.name
   location                   = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix                = "azure-enterprise"
+  name_prefix                = var.name_prefix
   private_endpoint_subnet_id = module.networking.private_endpoint_subnet_id
   vnet_id                    = module.networking.vnet_id
-
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
+  common_tags                = local.common_tags
 
   sql = {
     administrator_login = "sqladmin"
@@ -143,14 +131,14 @@ module "data" {
 
   databases = {
     app = {
-      sku_name    = "Basic"
+      sku_name    = var.sql_database_sku
       max_size_gb = 2
     }
   }
 
   storage = {
     account_tier             = "Standard"
-    account_replication_type = "LRS"
+    account_replication_type = var.storage_replication_type
 
     containers = {
       uploads = {}
@@ -178,22 +166,18 @@ module "governance" {
   resource_group_name  = azurerm_resource_group.azure_enterprise_project.name
   resource_group_id    = azurerm_resource_group.azure_enterprise_project.id
   location             = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix          = "azure-enterprise"
-  enable_resource_lock = false
+  name_prefix          = var.name_prefix
+  enable_resource_lock = var.enable_resource_lock
+  common_tags          = local.common_tags
 
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
-
-  allowed_locations = ["eastus"]
+  allowed_locations = [lower(replace(var.location, " ", ""))]
   required_tags     = ["environment", "project"]
 
   budget = {
     monthly_amount   = 100
     start_date       = "2026-10-01T00:00:00Z"
     alert_thresholds = [80, 100]
-    contact_emails   = ["athomas@copado.com"]
+    contact_emails   = var.budget_contact_emails
   }
 }
 
@@ -202,12 +186,8 @@ module "compute" {
 
   resource_group_name = azurerm_resource_group.azure_enterprise_project.name
   location            = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix         = "azure-enterprise"
-
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
+  name_prefix         = var.name_prefix
+  common_tags         = local.common_tags
 
   vm_subnet_id = module.networking.vm_subnet_id
 
@@ -221,6 +201,7 @@ module "compute" {
   }
 
   app_service = {
+    plan_sku_name = var.plan_sku_name
     subnet_id     = module.networking.app_subnet_id
     identity_id   = module.identity.identity_ids["app"]
     key_vault_uri = module.keyvault.uri
@@ -240,19 +221,13 @@ module "monitoring" {
 
   resource_group_name = azurerm_resource_group.azure_enterprise_project.name
   location            = azurerm_resource_group.azure_enterprise_project.location
-  name_prefix         = "azure-enterprise"
+  name_prefix         = var.name_prefix
+  common_tags         = local.common_tags
 
-  common_tags = {
-    environment = "dev"
-    project     = "azure-enterprise"
-  }
-
-  alert_email_receivers = [
-    {
-      name          = "AJ Thomas"
-      email_address = "athomas@copado.com"
-    }
-  ]
+  alert_email_receivers = [for email in var.budget_contact_emails : {
+    name          = email
+    email_address = email
+  }]
 
   key_vault_id           = module.keyvault.id
   sql_server_id          = module.data.sql_server_id

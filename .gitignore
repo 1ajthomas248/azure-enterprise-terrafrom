@@ -17,6 +17,8 @@ crash.*.log
 !*.tfvars.example
 !*.tfvars.json.example
 !*.tfbackend.example
+# Environment-specific tfvars contain no secrets (shape/SKU decisions only) — commit them
+!environments/**/*.tfvars
 
 # Terraform plan output and overrides
 *.tfplan
