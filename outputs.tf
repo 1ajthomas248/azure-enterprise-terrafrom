@@ -53,3 +53,17 @@ output "app_service_name" {
 output "app_service_default_hostname" {
   value = module.compute.app_service_default_hostname
 }
+
+output "log_analytics_workspace_id" {
+  value = module.monitoring.log_analytics_workspace_id
+}
+
+output "app_insights_instrumentation_key" {
+  value     = module.monitoring.app_insights_instrumentation_key
+  sensitive = true
+}
+
+output "app_insights_connection_string" {
+  value     = module.monitoring.app_insights_connection_string
+  sensitive = true
+}

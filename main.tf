@@ -1,17 +1,3 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.7.2"
-    }
-  }
-  required_version = ">= 1.14"
-}
-
 resource "azurerm_resource_group" "azure_enterprise_project" {
   name     = "azure-enterprise-project"
   location = "East US"
@@ -229,7 +215,7 @@ module "compute" {
     api = {
       size           = "Standard_B2s"
       admin_username = "azureadmin"
-      admin_ssh_key  = "ssh-rsa REPLACE_WITH_YOUR_PUBLIC_KEY"
+      admin_ssh_key  = var.vm_admin_ssh_key
       identity_id    = module.identity.identity_ids["vm"]
     }
   }
@@ -239,8 +225,38 @@ module "compute" {
     identity_id   = module.identity.identity_ids["app"]
     key_vault_uri = module.keyvault.uri
 
+    app_settings = {
+      APPLICATIONINSIGHTS_CONNECTION_STRING = module.monitoring.app_insights_connection_string
+    }
+
     app_stack = {
       python_version = "3.11"
     }
   }
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  resource_group_name = azurerm_resource_group.azure_enterprise_project.name
+  location            = azurerm_resource_group.azure_enterprise_project.location
+  name_prefix         = "azure-enterprise"
+
+  common_tags = {
+    environment = "dev"
+    project     = "azure-enterprise"
+  }
+
+  alert_email_receivers = [
+    {
+      name          = "AJ Thomas"
+      email_address = "athomas@copado.com"
+    }
+  ]
+
+  key_vault_id           = module.keyvault.id
+  sql_server_id          = module.data.sql_server_id
+  database_ids           = module.data.database_ids
+  storage_account_id     = module.data.storage_account_id
+  application_gateway_id = module.networking.application_gateway_id
 }
